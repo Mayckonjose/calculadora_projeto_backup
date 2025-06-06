@@ -1,0 +1,334 @@
+{% extends 'base.html' %}
+
+{% block title %}Calculadora{% endblock %}
+
+{% block content %}
+<div class="calculator-container">
+  <form method="post" id="calculator-form" novalidate>
+    {% csrf_token %}
+    <!-- Visor -->
+    <div class="calculator-display" aria-live="polite" role="textbox" aria-label="Visor da calculadora">
+      {% if form.instance.result is not None %}
+        {{ form.instance.result }}
+      {% else %}
+        0
+      {% endif %}
+    </div>
+
+    <!-- Inputs ocultos -->
+    {{ form.first_number.as_hidden }}
+    {{ form.operation.as_hidden }}
+    {{ form.second_number.as_hidden }}
+
+    <!-- Erros -->
+    {% if form.non_field_errors %}
+      <div class="form-error" role="alert">
+        {% for error in form.non_field_errors %}
+          {{ error }}
+        {% endfor %}
+      </div>
+    {% endif %}
+    {% if form.second_number.errors %}
+      <div class="form-error" role="alert">
+        {% for error in form.second_number.errors %}
+          {{ error }}
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Botões -->
+    <div class="calculator-buttons" role="group" aria-label="Teclado da calculadora">
+      <button type="button" class="btn-calc" data-value="7">7</button>
+      <button type="button" class="btn-calc" data-value="8">8</button>
+      <button type="button" class="btn-calc" data-value="9">9</button>
+      <button type="button" class="btn-op" data-op="/">÷</button>
+
+      <button type="button" class="btn-calc" data-value="4">4</button>
+      <button type="button" class="btn-calc" data-value="5">5</button>
+      <button type="button" class="btn-calc" data-value="6">6</button>
+      <button type="button" class="btn-op" data-op="*">×</button>
+
+      <button type="button" class="btn-calc" data-value="1">1</button>
+      <button type="button" class="btn-calc" data-value="2">2</button>
+      <button type="button" class="btn-calc" data-value="3">3</button>
+      <button type="button" class="btn-op" data-op="-">−</button>
+
+      <button type="button" class="btn-calc" data-value="0">0</button>
+      <button type="button" class="btn-calc" data-value=".">.</button>
+      <button type="button" class="btn-clear" aria-label="Limpar">C</button>
+      <button type="button" class="btn-op" data-op="+">+</button>
+
+      <button type="submit" class="btn-equal" aria-label="Calcular">=</button>
+    </div>
+  </form>
+</div>
+
+<style>
+  .calculator-container {
+    max-width: 420px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+  }
+
+  form#calculator-form {
+    width: 100%;
+  }
+
+  .calculator-display {
+    background: #e0e7ff;
+    color: #1e293b;
+    font-size: 3rem;
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    text-align: right;
+    box-shadow: inset 0 0 8px rgb(100 116 139 / 0.3);
+    user-select: none;
+    min-height: 70px;
+    margin-bottom: 1.25rem;
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+  }
+
+  .form-error {
+    color: #dc2626;
+    background-color: #fee2e2;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    margin-bottom: 1rem;
+    font-weight: 500;
+  }
+
+  .calculator-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+
+  button {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.5rem;
+    padding: 1rem 0;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background-color 0.25s ease, transform 0.1s ease;
+    user-select: none;
+    box-shadow: 0 3px 6px rgb(0 0 0 / 0.1);
+  }
+
+  button:focus {
+    outline: 3px solid #2563eb;
+    outline-offset: 2px;
+  }
+
+  .btn-calc {
+    background-color: #f3f4f6;
+    color: #374151;
+  }
+  .btn-calc:hover {
+    background-color: #e5e7eb;
+  }
+  .btn-calc:active {
+    transform: scale(0.95);
+    background-color: #d1d5db;
+  }
+
+  .btn-op {
+    background-color: #3b82f6;
+    color: white;
+    font-weight: 700;
+  }
+  .btn-op:hover {
+    background-color: #2563eb;
+  }
+  .btn-op:active {
+    transform: scale(0.95);
+    background-color: #1e40af;
+  }
+
+  .btn-clear {
+    background-color: #ef4444;
+    color: white;
+    font-weight: 700;
+  }
+  .btn-clear:hover {
+    background-color: #dc2626;
+  }
+  .btn-clear:active {
+    transform: scale(0.95);
+    background-color: #b91c1c;
+  }
+
+  .btn-equal {
+    background-color: #10b981;
+    color: white;
+    font-weight: 700;
+    grid-column: span 4;
+    padding: 1.25rem 0;
+  }
+  .btn-equal:hover {
+    background-color: #059669;
+  }
+  .btn-equal:active {
+    transform: scale(0.95);
+    background-color: #047857;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const display = document.querySelector('.calculator-display');
+    const form = document.getElementById('calculator-form');
+    const firstNumInput = document.getElementById('id_first_number');
+    const operationInput = document.getElementById('id_operation');
+    const secondNumInput = document.getElementById('id_second_number');
+
+    let currentOperand = '0';
+    let previousOperand = null;
+    let chosenOperation = null;
+    let displayExpression = '0';
+    let justCalculated = {% if form.instance.result is not None %}true{% else %}false{% endif %};
+
+    // Inicialização
+    if (justCalculated) {
+        currentOperand = display.textContent.trim(); // Resultado do backend
+        displayExpression = currentOperand;
+        // previousOperand e chosenOperation são resetados para que o resultado seja o novo currentOperand
+    } else {
+        display.textContent = '0'; // Garante que o visor HTML mostre '0'
+        // currentOperand e displayExpression já são '0' por padrão
+    }
+    updateDisplayInternal(); // Chamada inicial para garantir que o visor HTML esteja sincronizado
+
+    function updateDisplayInternal() {
+        display.textContent = displayExpression;
+        // Para depuração:
+        // console.log(`State: Curr=${currentOperand}, Prev=${previousOperand}, Op=${chosenOperation}, Disp=${displayExpression}, JustCalc=${justCalculated}`);
+    }
+
+    function resetForNewCalculation() {
+        previousOperand = null;
+        chosenOperation = null;
+        justCalculated = false;
+    }
+
+    function appendNumber(number) {
+        if (justCalculated) {
+            currentOperand = number;
+            displayExpression = currentOperand;
+            resetForNewCalculation();
+        } else {
+            if (number === '.' && currentOperand.includes('.')) return;
+            if (currentOperand === '0' && number !== '.') {
+                currentOperand = number;
+            } else {
+                currentOperand += number;
+            }
+            // Atualizar displayExpression
+            if (chosenOperation && previousOperand !== null) {
+                displayExpression = `${previousOperand} ${chosenOperation} ${currentOperand}`;
+            } else {
+                displayExpression = currentOperand;
+            }
+        }
+        updateDisplayInternal();
+    }
+
+    function selectOperation(operation) {
+        if (currentOperand === '' && !justCalculated) return; // Evita setar operação sem um primeiro operando
+
+        if (previousOperand !== null && chosenOperation !== null && currentOperand !== '' && !justCalculated) {
+            // Encadeamento: Se temos "PrevOp Op CurrOp" e um novo operador é clicado,
+            // idealmente calcularíamos o intermediário. Backend atual não faz isso sem submit.
+            // Então, o novo operador substituirá o antigo, usando o resultado do cálculo anterior (se houver)
+            // ou o previousOperand atual.
+            // Para esta versão, vamos simplificar: se uma operação completa já estava formada e um novo operador é clicado,
+            // o currentOperand (que era o segundo número) se torna o previousOperand para a nova operação.
+            previousOperand = currentOperand; 
+        } else if (currentOperand !== '') {
+             previousOperand = currentOperand; // O operando atual se torna o primeiro.
+        } 
+        // Se previousOperand é null (nenhum número digitado ainda), não faz nada.
+        if (previousOperand === null) return;
+        
+        chosenOperation = operation;
+        currentOperand = ''; // Limpa para o segundo operando
+        justCalculated = false; // Não é mais um resultado recém-calculado
+        displayExpression = `${previousOperand} ${chosenOperation}`;
+        updateDisplayInternal();
+    }
+
+    function prepareAndValidateForm() {
+        if (previousOperand === null || chosenOperation === null) {
+            // Se o usuário digitou apenas um número (ex: "5") e pressionou "=", não é uma operação válida para o backend.
+            // Se previousOperand existe, mas não chosenOperation, e currentOperand está preenchido (não deveria acontecer com a lógica atual)
+            if (previousOperand !== null && !chosenOperation && currentOperand !== '0' && currentOperand !== ''){
+                 // console.log("Form invalid: Only one number entered, no operation.");
+                 return false;
+            }
+            // console.log("Form invalid: Missing previous operand or operation.");
+            return false;
+        }
+
+        let firstVal = parseFloat(previousOperand);
+        let opVal = chosenOperation;
+        let secondVal;
+
+        if (currentOperand === '' || currentOperand === null) {
+            // Caso "5 * =", usa o primeiro operando como segundo.
+            secondVal = firstVal;
+        } else {
+            secondVal = parseFloat(currentOperand);
+        }
+
+        if (isNaN(firstVal) || isNaN(secondVal)) {
+            // console.log("Form invalid: NaN values.");
+            return false; // Não submete se os números não forem válidos
+        }
+
+        firstNumInput.value = firstVal;
+        operationInput.value = opVal;
+        secondNumInput.value = secondVal;
+        // console.log("Form prepped:", firstNumInput.value, operationInput.value, secondNumInput.value);
+        return true; // Formulário pronto para submissão
+    }
+
+    function clearAll() {
+        currentOperand = '0';
+        previousOperand = null;
+        chosenOperation = null;
+        displayExpression = '0';
+        justCalculated = false;
+        if(firstNumInput) firstNumInput.value = '';
+        if(operationInput) operationInput.value = '';
+        if(secondNumInput) secondNumInput.value = '';
+        updateDisplayInternal();
+    }
+
+    // Event Listeners
+    document.querySelectorAll('.btn-calc').forEach(button => {
+        button.addEventListener('click', () => appendNumber(button.dataset.value));
+    });
+
+    document.querySelectorAll('.btn-op').forEach(button => {
+        button.addEventListener('click', () => selectOperation(button.dataset.op));
+    });
+
+    if (document.querySelector('.btn-clear')) {
+        document.querySelector('.btn-clear').addEventListener('click', clearAll);
+    }
+
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!prepareAndValidateForm()) {
+                e.preventDefault(); // Impede a submissão se os dados não são válidos
+                // console.log("Form submission prevented by prepareAndValidateForm.");
+            }
+            // Se prepareAndValidateForm retornar true, a submissão prossegue.
+        });
+    }
+});
+</script>
+{% endblock %}

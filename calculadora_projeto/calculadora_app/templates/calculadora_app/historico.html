@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %}Histórico de Cálculos{% endblock %}
+
+{% block content %}
+<h1>Histórico de Cálculos</h1>
+
+{% if historico %}
+  <table class="history-table" role="table" aria-label="Tabela de histórico de cálculos">
+    <thead>
+      <tr>
+        <th>Primeiro Número</th>
+        <th>Operação</th>
+        <th>Segundo Número</th>
+        <th>Resultado</th>
+        <th>Data</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in historico %}
+      <tr>
+        <td>{{ item.first_number }}</td>
+        <td>{{ item.operation }}</td>
+        <td>{{ item.second_number }}</td>
+        <td><strong>{{ item.result }}</strong></td>
+        <td>{{ item.created_at|date:"d/m/Y H:i" }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <p class="empty-message">Nenhum cálculo registrado ainda.</p>
+{% endif %}
+
+<style>
+  h1 {
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 1rem;
+    font-size: 2rem;
+  }
+
+  .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 3px 8px rgb(0 0 0 / 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  thead {
+    background-color: #3b82f6;
+    color: white;
+  }
+
+  thead th {
+    padding: 1rem 1.25rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 1rem;
+  }
+
+  tbody tr {
+    background-color: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    transition: background-color 0.25s ease;
+  }
+
+  tbody tr:hover {
+    background-color: #e0e7ff;
+  }
+
+  tbody td {
+    padding: 0.85rem 1.25rem;
+    color: #374151;
+    font-size: 1rem;
+  }
+
+  tbody td strong {
+    color: #2563eb;
+  }
+
+  .empty-message {
+    color: #64748b;
+    font-style: italic;
+    padding: 2rem 1rem;
+    text-align: center;
+    font-size: 1.125rem;
+  }
+
+  @media (max-width: 600px) {
+    .history-table,
+    thead,
+    tbody,
+    th,
+    td,
+    tr {
+      display: block;
+    }
+
+    thead tr {
+      display: none;
+    }
+
+    tbody tr {
+      margin-bottom: 1.25rem;
+      background-color: #f3f4f6;
+      border-radius: 10px;
+      padding: 1rem;
+      box-shadow: 0 2px 6px rgb(0 0 0 / 0.05);
+    }
+
+    tbody td {
+      padding: 0.5rem 0;
+      text-align: right;
+      position: relative;
+      padding-left: 50%;
+      font-size: 0.95rem;
+    }
+
+    tbody td::before {
+      content: attr(data-label);
+      position: absolute;
+      left: 1rem;
+      width: 45%;
+      padding-left: 0.25rem;
+      font-weight: 600;
+      color: #1e293b;
+      text-align: left;
+    }
+  }
+</style>
+
+<script>
+  // Adiciona data-label para cada td para acessibilidade em mobile
+  document.addEventListener('DOMContentLoaded', () => {
+    const headers = ['Primeiro Número', 'Operação', 'Segundo Número', 'Resultado', 'Data'];
+    const rows = document.querySelectorAll('.history-table tbody tr');
+    rows.forEach(row => {
+      row.querySelectorAll('td').forEach((td, i) => {
+        td.setAttribute('data-label', headers[i]);
+      });
+    });
+  });
+</script>
+{% endblock %}

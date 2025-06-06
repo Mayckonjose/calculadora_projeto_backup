@@ -1,0 +1,154 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Minha Calculadora{% endblock %}</title>
+
+  <!-- Fonte elegante e moderna -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* Reset simples */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f5f7fa;
+      color: #222;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    a {
+      color: #3b82f6;
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+    a:hover {
+      color: #2563eb;
+    }
+
+    nav {
+      background: #fff;
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.1);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    nav .brand {
+      font-weight: 600;
+      font-size: 1.5rem;
+      color: #1e293b;
+      letter-spacing: 1px;
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    nav ul li {
+      font-weight: 500;
+    }
+
+    nav ul li a {
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      transition: background-color 0.3s ease;
+    }
+
+    nav ul li a:hover,
+    nav ul li a.active {
+      background-color: #3b82f6;
+      color: white;
+    }
+
+    main {
+      flex-grow: 1;
+      padding: 2rem;
+      max-width: 900px;
+      margin: 2rem auto;
+      width: 90%;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgb(0 0 0 / 0.07);
+      transition: box-shadow 0.3s ease;
+    }
+
+    main:hover {
+      box-shadow: 0 8px 22px rgb(0 0 0 / 0.12);
+    }
+
+    footer {
+      text-align: center;
+      padding: 1rem 0;
+      font-size: 0.9rem;
+      color: #94a3b8;
+      border-top: 1px solid #e2e8f0;
+      background: #fff;
+      margin-top: auto;
+    }
+
+    /* Scrollbar estilizada para navegadores modernos */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f5f7fa;
+    }
+    ::-webkit-scrollbar-thumb {
+      background-color: #3b82f6;
+      border-radius: 10px;
+      border: 2px solid #f5f7fa;
+    }
+
+    /* Responsividade */
+    @media (max-width: 600px) {
+      nav {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      nav ul {
+        gap: 1rem;
+      }
+      main {
+        padding: 1rem;
+        width: 95%;
+        margin: 1.5rem auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="{% url 'calculadora_app:calculadora' %}" class="brand">Calculadora</a>
+    <ul>
+      <li><a href="{% url 'calculadora_app:calculadora' %}" class="{% if request.resolver_match.url_name == 'calculadora' %}active{% endif %}">Calculadora</a></li>
+      <li><a href="{% url 'calculadora_app:historico' %}" class="{% if request.resolver_match.url_name == 'historico' %}active{% endif %}">Histórico</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    {% block content %}
+    <!-- Conteúdo específico -->
+    {% endblock %}
+  </main>
+
+  <footer>
+    &copy; {{ now|date:"Y" }} - Desenvolvido por Você
+  </footer>
+</body>
+</html>
